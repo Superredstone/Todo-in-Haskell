@@ -1,42 +1,48 @@
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 import Control.Exception
+import Data.Aeson (FromJSON, ToJSON, decode, encode)
+import Data.ByteString (pack)
+import qualified Data.ByteString.Lazy as BS
+import Data.Maybe (fromMaybe)
+import GHC.Generics (Generic)
+import System.Directory
 import System.Exit (exitSuccess)
 import System.IO
 
-data Todo where
-  Todo ::
-    { name :: String,
-      checked :: Bool
-    } ->
-    Todo
-  deriving (Show, Eq)
+data Todo = Todo
+  { name :: String,
+    checked :: Bool
+  }
+  deriving (Show, Eq, Generic, ToJSON, FromJSON)
+
+todosFileName :: String
+todosFileName = ".todos"
 
 main :: IO ()
 main = do
   putStrLn "Made with <3 in Haskell by Superredstone\n"
-  todoProgram []
+  todos <- readTodos
+  todoProgram todos
 
 todoProgram :: [Todo] -> IO ()
 todoProgram todos = do
   line <- printAndGet "> "
 
   case strip line of
-    "new" -> do
-      newTodo todos
-    "show" -> do
-      showTodos todos
-    "delete" -> do
-      deleteTodo todos
-    "toggle" -> do
-      toggleTodo todos
-    "help" -> do
-      printHelp todos
+    "new" -> newTodo todos
+    "show" -> showTodos todos
+    "delete" -> deleteTodo todos
+    "save" -> saveTodos todos
+    "toggle" -> toggleTodo todos
+    "help" -> printHelp todos
     "version" -> do
       putStrLn "v1.0\n"
       todoProgram todos
-    "exit" -> do
-      putStrLn "Exiting the program...\n"
+    "exit" -> putStrLn "Exiting the program...\n"
     _ -> do
       putStrLn "Invalid operation.\n"
       todoProgram todos
@@ -91,6 +97,24 @@ deleteTodo todos = do
     else do
       putStrLn "This todo does not exist."
       todoProgram todos
+
+saveTodos :: [Todo] -> IO ()
+saveTodos todos = do
+  putStrLn "Saving..."
+  BS.writeFile todosFileName (encode todos)
+  putStrLn "Saved.\n"
+  todoProgram todos
+
+readTodos :: IO [Todo]
+readTodos = do
+  fileExist <- doesFileExist ".todos"
+  if fileExist
+    then do
+      file <- BS.readFile todosFileName
+      let todos = decode file :: Maybe [Todo]
+      return (fromMaybe [] todos)
+    else do
+      return []
 
 showTodos :: [Todo] -> IO ()
 showTodos todos = do
