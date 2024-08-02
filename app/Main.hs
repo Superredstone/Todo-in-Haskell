@@ -1,12 +1,8 @@
+{-# LANGUAGE GADTs #-}
+
 import Control.Exception
-import Data.Foldable (find)
-import GHC.Base (when)
 import System.Exit (exitSuccess)
 import System.IO
-import Text.Read (Lexeme (String))
-import Text.Read.Lex (Number)
-
-type TodoName = String
 
 data Todo where
   Todo ::
@@ -40,20 +36,20 @@ todoProgram todos = do
       putStrLn "v1.0\n"
       todoProgram todos
     "exit" -> do
-      putStrLn "\nExiting the program..."
+      putStrLn "Exiting the program...\n"
     _ -> do
-      putStrLn "Invalid operation."
+      putStrLn "Invalid operation.\n"
       todoProgram todos
 
 printHelp :: [Todo] -> IO ()
 printHelp todos = do
   putStrLn
-    "new\tCreate a new todo\n\
-    \delete\tDelete an existing todo\n\
-    \show\tDisplay all todos\n\
-    \help\tPrint this message\n\
-    \version\tPrint program version\n\
-    \exit\tClose the program\n"
+    "new\t\tCreate a new todo\n\
+    \delete\t\tDelete an existing todo\n\
+    \show\t\tDisplay all todos\n\
+    \help\t\tPrint this message\n\
+    \version\t\tPrint program version\n\
+    \exit\t\tClose the program\n"
   todoProgram todos
 
 newTodo :: [Todo] -> IO ()
@@ -69,6 +65,7 @@ newTodo todos =
         let newTodos = todos ++ [Todo line False]
         todoProgram newTodos
 
+toggleTodo :: [Todo] -> IO ()
 toggleTodo todos = do
   input <- printAndGet "Todo name: "
   putStrLn ""
@@ -81,6 +78,7 @@ toggleTodo todos = do
       putStrLn "This todo does not exist.\n"
       todoProgram todos
 
+replace :: Int -> a -> [a] -> [a]
 replace pos newVal list = take pos list ++ newVal : drop (pos + 1) list
 
 deleteTodo :: [Todo] -> IO ()
