@@ -40,7 +40,7 @@ todoProgram todos = do
     "toggle" -> toggleTodo todos
     "help" -> printHelp todos
     "version" -> do
-      putStrLn "v1.0\n"
+      putStrLn "v1.1\n"
       todoProgram todos
     "exit" -> putStrLn "Exiting the program...\n"
     _ -> do
